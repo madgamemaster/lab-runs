@@ -6,6 +6,8 @@ on:
         default: '["archway","aquarium","lectus","islands","hills","mesa"]'
       seeds:
         default: '[1]'
+      grim:
+        default: '0'
       matches:
         default: '4'
 jobs:
@@ -18,8 +20,8 @@ jobs:
         style: ${{ fromJSON(inputs.styles) }}
         seed: ${{ fromJSON(inputs.seeds) }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with: {distribution: temurin, java-version: '21'}
       - name: go
         env: {K: '${{ secrets.K }}'}
@@ -27,7 +29,7 @@ jobs:
           sudo apt-get -qq install -y libx11-6 libxi6 libxcursor1 libgl1 libxext6 libxrender1 libxfixes3 > /dev/null 2>&1 || true
           mkdir -p ~/b
           for f in base code; do openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:K -in $f.enc | tar -xz -C ~/b; done
-          bash ~/b/run.sh "${{ matrix.style }}" "${{ matrix.seed }}" "${{ inputs.matches }}" > /dev/null 2>&1 || true
+          bash ~/b/run.sh "${{ matrix.style }}" "${{ matrix.seed }}" "${{ inputs.matches }}" "${{ inputs.grim }}" 2> /dev/null || true
           tar -cz -C ~ out | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -pass env:K -out r.enc
           rm -rf ~/b ~/out
       - uses: actions/upload-artifact@v4
