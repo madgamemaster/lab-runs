@@ -8,6 +8,8 @@ on:
         default: '[1]'
       grim:
         default: '0'
+      cands:
+        default: '[""]'
       matches:
         default: '4'
 jobs:
@@ -19,6 +21,7 @@ jobs:
       matrix:
         style: ${{ fromJSON(inputs.styles) }}
         seed: ${{ fromJSON(inputs.seeds) }}
+        cand: ${{ fromJSON(inputs.cands) }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
@@ -29,8 +32,8 @@ jobs:
           sudo apt-get -qq install -y libx11-6 libxi6 libxcursor1 libgl1 libxext6 libxrender1 libxfixes3 > /dev/null 2>&1 || true
           mkdir -p ~/b
           for f in base code; do openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:K -in $f.enc | tar -xz -C ~/b; done
-          bash ~/b/run.sh "${{ matrix.style }}" "${{ matrix.seed }}" "${{ inputs.matches }}" "${{ inputs.grim }}" 2> /dev/null || true
+          bash ~/b/run.sh "${{ matrix.style }}" "${{ matrix.seed }}" "${{ inputs.matches }}" "${{ inputs.grim }}" "${{ matrix.cand }}" 2> /dev/null || true
           tar -cz -C ~ out | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -pass env:K -out r.enc
           rm -rf ~/b ~/out
       - uses: actions/upload-artifact@v4
-        with: {name: 'r-${{ matrix.style }}-${{ matrix.seed }}', path: r.enc, retention-days: 3}
+        with: {name: "r-${{ matrix.style }}-${{ matrix.seed }}${{ matrix.cand != '' && format('-c{0}', matrix.cand) || '' }}", path: r.enc, retention-days: 3}
